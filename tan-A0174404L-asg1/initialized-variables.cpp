@@ -42,7 +42,6 @@ int main(int argc, char **argv)
 		std::set<Instruction*> emptySet;
 		analysisMap[getSimpleNodeLabel(&BB)] = emptySet;
 	}
-	printAnalysisMap(analysisMap);
 
 	// 2. Traversing the CFG in Depth First Order
 	// In order to do so, we use a stack: traversalStack.
@@ -62,18 +61,18 @@ int main(int argc, char **argv)
 		int depth = succAnalysisNode.second;
 		traversalStack.pop();
 
-		// Print the Basic Block, depth is used for pretty printing
-		if(BB != entryBB) {
-			for(int i = 0; i < 2*depth; ++i) {
-				llvm::outs() << " ";
-			}
-			llvm::outs() << "| \n";
-		}
-
-		for(int i = 0; i < 2*depth; ++i) {
-			llvm::outs() << " ";
-		}
+		// Compute initialized variables
 		llvm::outs() << "Label: " << getSimpleNodeLabel(BB) << "\n";
+		for(auto &I: *BB) {	// Iterate through instructions to look for initialized variables
+			if(isa<StoreInst>(I)) {
+				Value* v = I.getOperand(1);	// retrieving second argument
+				Instruction* var = dyn_cast<Instruction>(v);
+				var->dump();
+
+				// Push initialized variable to analysis map
+				analysisMap.at(getSimpleNodeLabel(BB)).insert(var);
+			}
+		}
 
 		// Extract the last instruction in the stack (Terminator Instruction)
 		const TerminatorInst *TInst = BB->getTerminator();
@@ -89,6 +88,10 @@ int main(int argc, char **argv)
 			traversalStack.push(succAnalysisNode);
 		}
 	}
+
+	// 4. Print result
+	std::cout << std::endl;
+	printAnalysisMap(analysisMap);
 
 	return 0;
 }
@@ -106,6 +109,7 @@ std::string getSimpleNodeLabel(const BasicBlock *Node) {
 
 // Print Analysis Map
 void printAnalysisMap(std::map<std::string, std::set<Instruction*>> analysisMap) {
+	std::cout << "Print Analysis Map\n";
 	for(auto& row : analysisMap) {
 		std::set<Instruction*> initializedVars = row.second;
 		std::string BBLabel = row.first;
