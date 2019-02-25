@@ -86,6 +86,12 @@ int main(int argc, char **argv)
 			BasicBlock *Succ = TInst->getSuccessor(i);
 			std::pair<BasicBlock*, int> succAnalysisNode = std::make_pair(Succ, depth+1);
 			traversalStack.push(succAnalysisNode);
+
+			// Push top Basic Block's initialized variables to successors
+			auto var = analysisMap.at(getSimpleNodeLabel(BB));
+			for (auto &I : var) {
+				analysisMap.at(getSimpleNodeLabel(Succ)).insert(I);
+			}
 		}
 	}
 
