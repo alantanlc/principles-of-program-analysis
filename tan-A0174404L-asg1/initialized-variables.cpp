@@ -61,16 +61,17 @@ int main(int argc, char **argv)
 		int depth = succAnalysisNode.second;
 		traversalStack.pop();
 
-		// Compute initialized variables
-		llvm::outs() << "Label: " << getSimpleNodeLabel(BB) << "\n";
-		for(auto &I: *BB) {	// Iterate through instructions to look for initialized variables
+		// Iterate through instructions to look for initialized variables
+		for(auto &I: *BB) {
 			if(isa<StoreInst>(I)) {
 				Value* v = I.getOperand(1);	// retrieving second argument
 				Instruction* var = dyn_cast<Instruction>(v);
-				var->dump();
+				//var->dump();
 
 				// Push initialized variable to analysis map
-				analysisMap.at(getSimpleNodeLabel(BB)).insert(var);
+				if(var) {
+					analysisMap.at(getSimpleNodeLabel(BB)).insert(var);
+				}
 			}
 		}
 
@@ -87,7 +88,7 @@ int main(int argc, char **argv)
 			std::pair<BasicBlock*, int> succAnalysisNode = std::make_pair(Succ, depth+1);
 			traversalStack.push(succAnalysisNode);
 
-			// Push top Basic Block's initialized variables to successors
+			// Push top Basic Block's initialized variables to successor basic blocks
 			auto var = analysisMap.at(getSimpleNodeLabel(BB));
 			for (auto &I : var) {
 				analysisMap.at(getSimpleNodeLabel(Succ)).insert(I);
