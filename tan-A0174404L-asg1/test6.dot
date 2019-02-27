@@ -1,0 +1,19 @@
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+
+	Node0x15845a0 [shape=record,label="{%0:\l  %1 = alloca i32, align 4\l  %a = alloca i32, align 4\l  %b = alloca i32, align 4\l  %c = alloca i32, align 4\l  %d = alloca i32, align 4\l  %e = alloca i32, align 4\l  %f = alloca i32, align 4\l  %i = alloca i32, align 4\l  store i32 0, i32* %1\l  store i32 5, i32* %b, align 4\l  store i32 0, i32* %i, align 4\l  br label %2\l}"];
+	Node0x15845a0 -> Node0x1587610;
+	Node0x1587610 [shape=record,label="{%2:\l\l  %3 = load i32* %i, align 4\l  %4 = icmp slt i32 %3, 10\l  br i1 %4, label %5, label %15\l|{<s0>T|<s1>F}}"];
+	Node0x1587610:s0 -> Node0x15878b0;
+	Node0x1587610:s1 -> Node0x1587910;
+	Node0x15878b0 [shape=record,label="{%5:\l\l  %6 = load i32* %i, align 4\l  %7 = srem i32 %6, 2\l  %8 = icmp eq i32 %7, 0\l  br i1 %8, label %9, label %10\l|{<s0>T|<s1>F}}"];
+	Node0x15878b0:s0 -> Node0x1587cc0;
+	Node0x15878b0:s1 -> Node0x1587d20;
+	Node0x1587cc0 [shape=record,label="{%9:\l\l  store i32 -1, i32* %f, align 4\l  br label %12\l}"];
+	Node0x1587cc0 -> Node0x1587ef0;
+	Node0x1587d20 [shape=record,label="{%10:\l\l  %11 = load i32* %b, align 4\l  store i32 %11, i32* %c, align 4\l  br label %12\l}"];
+	Node0x1587d20 -> Node0x1587ef0;
+	Node0x1587ef0 [shape=record,label="{%12:\l\l  %13 = load i32* %i, align 4\l  %14 = add nsw i32 %13, 1\l  store i32 %14, i32* %i, align 4\l  br label %2\l}"];
+	Node0x1587ef0 -> Node0x1587610;
+	Node0x1587910 [shape=record,label="{%15:\l\l  %16 = load i32* %d, align 4\l  store i32 %16, i32* %e, align 4\l  %17 = load i32* %1\l  ret i32 %17\l}"];
+}
