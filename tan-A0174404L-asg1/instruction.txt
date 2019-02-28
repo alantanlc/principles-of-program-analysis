@@ -1,6 +1,0 @@
-clang++-3.5  -o initialized-variables initialized-variables.cpp `llvm-config-3.5 --cxxflags` `llvm-config-3.5 --ldflags` `llvm-config-3.5 --libs` -lpthread -lncurses -ldl
-
-clang-3.5 -emit-llvm -S -o test6.ll test6.c
-opt-3.5 -dot-cfg test6.ll
-mv cfg.main.dot test6.dot
-./allfigs2pdf
