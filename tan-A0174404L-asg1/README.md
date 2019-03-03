@@ -1,3 +1,7 @@
+## Tan Lai Chian Alan
+## A0174404L
+## e0210437@u.nus.edu
+
 ## Generate .ll files
 clang-3.5 -emit-llvm -S -o test1.ll test1.c
 clang-3.5 -emit-llvm -S -o test2.ll test2.c

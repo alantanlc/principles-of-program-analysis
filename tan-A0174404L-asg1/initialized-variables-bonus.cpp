@@ -1,3 +1,9 @@
+/*
+	Tan Lai Chian Alan
+	A0174404L
+	e0210437@u.nus.edu
+*/
+
 #include <cstdio>
 #include <iostream>
 #include <set>
