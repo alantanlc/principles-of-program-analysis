@@ -9,6 +9,7 @@
 #include <set>
 #include <map>
 #include <stack>
+#include <sstream>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
 		analysisMap[getSimpleNodeLabel(&BB)] = instr;
 	}
 
-	// 1.2 Create Set to store tainted addresses
+	// 1.2 Create set to store tainted addresses
 	std::set<void*> tainted;
 
 	// 2. Traversing the CFG in Depth First Order
@@ -61,6 +62,8 @@ int main(int argc, char **argv)
 	BasicBlock* entryBB = &F->getEntryBlock();
 	std::pair<BasicBlock*, int> succAnalysisNode = std::make_pair(entryBB, 0);
 	traversalStack.push(succAnalysisNode);
+
+	ostringstream ss;
 
 	// 3. while the stack is not empty we pop the top Basic Block, print it and
 	// add its successor nodes to the stack plus an updated integer
@@ -97,10 +100,15 @@ int main(int argc, char **argv)
 
 					// Add variable to analysisMap
 					analysisMap.at(getSimpleNodeLabel(BB)).insert(v1->getName());
+					ss << &I;					
+					// analysisMap.at(getSimpleNodeLabel(BB)).insert(ss.str());
 				} else if (tainted.find(v1) != tainted.end()) {
 					cout << "\t\tRegister " << (void*) &I << " has been tainted!\n";
 					tainted.insert(&I);
-					// analysisMap.at(getSimpleNodeLabel(BB)).insert(&I);
+
+					// Add address to analysisMap
+					ss << &I;
+					// analysisMap.at(getSimpleNodeLabel(BB)).insert(ss.str());
 				}
 			} else if (I.getOpcode() == 28) {	// store
 				std::cout << "\tOpcodeName: " << I.getOpcodeName() << ", numOperands: " << I.getNumOperands() << std::endl;
@@ -130,17 +138,26 @@ int main(int argc, char **argv)
 		// Extract the number of successors the terminator instructor has
 		int NSucc = TInst->getNumSuccessors();
 
+		// For each successor
 		for (int i = 0; i < NSucc; ++i) {
-			// For all successor basic blocks, add them to the stack
-			// Increase the value of depth by 1
 			BasicBlock *Succ = TInst->getSuccessor(i);
-			std::pair<BasicBlock*, int> succAnalysisNode = std::make_pair(Succ, depth+1);
-			traversalStack.push(succAnalysisNode);
 
-			// Push top Basic Block's initialized variables to successor basic blocks
+			// Check if top Basic Block's tainted variables exist in successor Basic Block
+			// If no, means Analysis has changed for successor. In this case, set "hasChanged" to true and push tainted variables to analysisMap of successor
+			bool hasChanged = false;
 			auto var = analysisMap.at(getSimpleNodeLabel(BB));
 			for (auto &I : var) {
-				analysisMap.at(getSimpleNodeLabel(Succ)).insert(I);
+				if (analysisMap.at(getSimpleNodeLabel(Succ)).find(I) == analysisMap.at(getSimpleNodeLabel(Succ)).end()) {
+					hasChanged = true;
+					analysisMap.at(getSimpleNodeLabel(Succ)).insert(I);
+				}
+			}
+
+			// If Analysis has changed, push successor Basic Block to traversal stack
+			if (hasChanged) {
+				cout << "hasChanged!\n";
+				std::pair<BasicBlock*, int> succAnalysisNode = std::make_pair(Succ, depth+1);
+				traversalStack.push(succAnalysisNode);
 			}
 		}
 	}
