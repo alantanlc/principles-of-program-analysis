@@ -192,5 +192,9 @@ void printAnalysisMap(std::map<std::string, std::set<string>> analysisMap) {
 		}
 		cout << "}\n";
 	}
+
+	std::cout << std::endl;
+	std::cout << "PLEASE NOTE THAT BUILDING BLOCKS ARE NOT PRINTED IN ORDER\n";
+	std::cout << "%17 CORRESPONDS TO THE 'WHILE END' BLOCK\n";
 }
 

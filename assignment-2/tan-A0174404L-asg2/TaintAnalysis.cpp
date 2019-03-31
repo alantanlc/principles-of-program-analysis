@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 			std::pair<BasicBlock*, int> succAnalysisNode = std::make_pair(Succ, depth+1);
 			traversalStack.push(succAnalysisNode);
 
-			// Push top Basic Block's initialized variables to successor basic blocks
+			// Push top Basic Block's tainted variables to successor basic blocks
 			auto var = analysisMap.at(getSimpleNodeLabel(BB));
 			for (auto &I : var) {
 				analysisMap.at(getSimpleNodeLabel(Succ)).insert(I);

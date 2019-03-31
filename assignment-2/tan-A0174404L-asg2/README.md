@@ -1,3 +1,4 @@
+## CS5218 Assignment 2 - Taint Analysis on LLVM IR
 ## Tan Lai Chian Alan
 ## A0174404L
 ## e0210437@u.nus.edu
@@ -7,9 +8,10 @@ clang-3.5 -emit-llvm -S -o ./test-files/test1.ll ./test-files/test1.c
 clang-3.5 -emit-llvm -S -o ./test-files/test2.ll ./test-files/test2.c
 clang-3.5 -emit-llvm -S -o ./test-files/test3.ll ./test-files/test3.c
 
-## Build
+## Build for Task 2
 clang++-3.5 -o TaintAnalysis TaintAnalysis.cpp `llvm-config-3.5 --cxxflags` `llvm-config-3.5 --ldflags` `llvm-config-3.5 --libs` -lpthread -lncurses -ldl
 
+## Build for Task 3
 clang++-3.5 -o TaintAnalysisLoop TaintAnalysisLoop.cpp `llvm-config-3.5 --cxxflags` `llvm-config-3.5 --ldflags` `llvm-config-3.5 --libs` -lpthread -lncurses -ldl
 
 ## Example 1
