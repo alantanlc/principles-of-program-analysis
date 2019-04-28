@@ -10,6 +10,7 @@
 #include <map>
 #include <stack>
 #include <algorithm>
+#include <stdlib.h>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -32,6 +33,10 @@ typedef std::map<Value*,std::pair<int,int> > BBANALYSIS;
 std::map<std::string,BBANALYSIS > analysisMap;
 
 std::string getSimpleNodeLabel(const BasicBlock *Node);
+void printDifferenceAnalysis(BasicBlock& BB);
+
+int loop = 0;
+int printDiff = 0;
 
 //======================================================================
 // Check fixpoint reached
@@ -55,7 +60,7 @@ std::pair<int,int> union_pairs(std::pair<int,int> A, std::pair<int,int> B)
 
 	if(A.first == A.second && A.first != 0) {
 		if((B.first == B.second && B.first != 0)
-			|| (B.first != -10000 && B.second != 10000)) {
+			|| (B.first > -10000 && B.second < 10000)) {
 			A.first = (A.first < B.first) ? A.first : B.first;
 			A.second = (A.second > B.second) ? A.second : B.second;
 		}
@@ -66,10 +71,16 @@ std::pair<int,int> union_pairs(std::pair<int,int> A, std::pair<int,int> B)
 		A.second = B.second;
 	}
 
-	if(A.first == -10000 && A.second == 10000
-		&& B.first == B.second && B.first != 0) {
+	if(A.first <= -10000 && A.second >= 10000 && ((B.first == B.second && B.first != 0)
+		|| (B.first != B.second))) {
 		A.first = B.first;
 		A.second = B.second;
+	}
+
+	if(A.first > A.second) {
+		int temp = A.first;
+		A.first = A.second;
+		A.second = temp;
 	}
 
 	// cout << "RET: " << A.first << ", " << A.second << "\n\n";
@@ -138,25 +149,163 @@ std::pair<int,int> processLoad(llvm::Instruction* I, BBANALYSIS analysis)
 // Processing Mul Instructions
 std::pair<int,int> processMul(llvm::Instruction* I, BBANALYSIS analysis)
 {
-	return std::make_pair<int,int>(-10000, 10000);
+	Value* op1 = I->getOperand(0);
+	Value* op2 = I->getOperand(1);
+
+	int op1Int = 0;
+	int op2Int = 0;
+
+	if(isa<ConstantInt>(op1)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op1);
+		op1Int = CI->getSExtValue();
+	}
+
+	if(isa<ConstantInt>(op2)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op2);
+		op2Int = CI->getSExtValue();
+	}
+
+	// cout << "MUL\n";
+	// I->dump();
+	// cout << "\top1: " << op1 << ", op1Int: " << op1Int << "\n";
+	// cout << "\top2: " << op2 << ", op2Int: " << op2Int << "\n";
+	// cout << analysis[op2].first << "\n";
+	// cout << analysis[op1].first << "\n";
+
+	if(op1Int != 0) {
+		return std::make_pair<int,int>(analysis[op2].first * op1Int, analysis[op2].second * op1Int);
+	} else if(op2Int != 0) {
+		return std::make_pair<int,int>(analysis[op1].first * op2Int, analysis[op1].second * op2Int);
+	}
+
+	return std::make_pair<int,int>(analysis[op1].first * analysis[op2].first, analysis[op1].second * analysis[op2].second);
 }
 
 // Processing Div Instructions
 std::pair<int,int> processDiv(llvm::Instruction* I, BBANALYSIS analysis)
 {
-	return std::make_pair<int,int>(-10000, 10000);
+	Value* op1 = I->getOperand(0);
+	Value* op2 = I->getOperand(1);
+
+	int op1Int = 0;
+	int op2Int = 0;
+
+	if(isa<ConstantInt>(op1)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op1);
+		op1Int = CI->getSExtValue();
+	}
+
+	if(isa<ConstantInt>(op2)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op2);
+		op2Int = CI->getSExtValue();
+	}
+
+	// cout << "DIV\n";
+	// I->dump();
+	// cout << "\top1: " << op1 << ", op1Int: " << op1Int << "\n";
+	// cout << "\top2: " << op2 << ", op2Int: " << op2Int << "\n";
+	// cout << analysis[op2].first << "\n";
+	// cout << analysis[op1].first << "\n";
+
+	if(op1Int != 0) {
+		return std::make_pair<int,int>(analysis[op2].first / op1Int, analysis[op2].second / op1Int);
+	} else if(op2Int != 0) {
+		return std::make_pair<int,int>(analysis[op1].first / op2Int, analysis[op1].second / op2Int);
+	}
+
+	return std::make_pair<int,int>(analysis[op1].first / analysis[op2].first, analysis[op1].second / analysis[op2].second);
+
 }
 
-// Processing Add & Sub Instructions
-std::pair<int,int> processAddSub(llvm::Instruction* I, BBANALYSIS analysis)
+// Processing Add Instructions
+std::pair<int,int> processAdd(llvm::Instruction* I, BBANALYSIS analysis)
 {
-	return std::make_pair<int,int>(-10000, 10000);
+	Value* op1 = I->getOperand(0);
+	Value* op2 = I->getOperand(1);
+
+	int op1Int = 0;
+	int op2Int = 0;
+
+	if(isa<ConstantInt>(op1)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op1);
+		op1Int = CI->getSExtValue();
+	}
+
+	if(isa<ConstantInt>(op2)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op2);
+		op2Int = CI->getSExtValue();
+	}
+
+	// cout << "ADD\n";
+	// I->dump();
+	// cout << "\top1: " << op1 << ", op1Int: " << op1Int << "\n";
+	// cout << "\top2: " << op2 << ", op2Int: " << op2Int << "\n";
+	// cout << analysis[op2].first << ", " << analysis[op2].second << "\n";
+	// cout << analysis[op1].first << ", " << analysis[op1].second << "\n";
+
+	if(op1Int != 0) {
+		// cout << "\tRET: [" << analysis[op2].first + op1Int << ", " << analysis[op2].second + op1Int << "]\n";
+		return std::make_pair<int,int>(analysis[op2].first + op1Int, analysis[op2].second + op1Int);
+	} else if(op2Int != 0) {
+		// cout << "\tRET: [" << analysis[op1].first + op2Int << ", " << analysis[op1].second + op2Int << "]\n";
+		return std::make_pair<int,int>(analysis[op1].first + op2Int, analysis[op1].second + op2Int);
+	}
+
+	// cout << "\tRET: [" << analysis[op1].first + analysis[op2].first << ", " << analysis[op1].second + analysis[op2].second << "]\n";
+
+	return std::make_pair<int,int>(analysis[op1].first + analysis[op2].first, analysis[op1].second + analysis[op2].second);
+}
+
+// Processing Sub Instructions
+std::pair<int,int> processSub(llvm::Instruction* I, BBANALYSIS analysis)
+{
+	Value* op1 = I->getOperand(0);
+	Value* op2 = I->getOperand(1);
+
+	int op1Int = 0;
+	int op2Int = 0;
+
+	if(isa<ConstantInt>(op1)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op1);
+		op1Int = CI->getSExtValue();
+	}
+
+	if(isa<ConstantInt>(op2)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op2);
+		op2Int = CI->getSExtValue();
+	}
+
+	// cout << "SUB\n";
+	// I->dump();
+	// cout << "\top1: " << op1 << ", op1Int: " << op1Int << "\n";
+	// cout << "\top2: " << op2 << ", op2Int: " << op2Int << "\n";
+	// cout << "\tRET: [" << op1Int - analysis[op2].first << ", " << op1Int - analysis[op2].second << "]\n";
+
+	return std::make_pair<int,int>(op1Int - analysis[op2].first, op1Int - analysis[op2].second);
 }
 
 // Processing Rem Instructions
 std::pair<int,int> processRem(llvm::Instruction* I, BBANALYSIS analysis)
 {
-	return std::make_pair<int,int>(-10000, 10000);
+	Value* op1 = I->getOperand(0);
+	Value* op2 = I->getOperand(1);
+
+	int64_t op1Int, op2Int = 0;
+
+	if(isa<ConstantInt>(op1)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op1);
+		op1Int = CI->getSExtValue();
+	}
+
+	if(isa<ConstantInt>(op2)){
+		llvm::ConstantInt *CI = dyn_cast<ConstantInt>(op2);
+		op2Int = CI->getSExtValue();
+	}
+
+	// cout << "REM\n";
+	// cout << "\tRET: [" << 0 << ", " << op2Int << "]\n";
+
+	return std::make_pair<int,int>(0, op2Int);
 }
 
 // update Basic Block Analysis
@@ -176,8 +325,10 @@ BBANALYSIS updateBBAnalysis(BasicBlock* BB,BBANALYSIS analysis)
 			analysis[&I] = processDiv(&I, analysis);
 	    }else if(I.getOpcode() == BinaryOperator::Mul){
 			analysis[&I] = processMul(&I, analysis);
-	    }else if(I.getOpcode() == BinaryOperator::Add || I.getOpcode() == BinaryOperator::Sub){
-			analysis[&I] = processAddSub(&I, analysis);
+	    }else if(I.getOpcode() == BinaryOperator::Add){
+			analysis[&I] = processAdd(&I, analysis);
+	    }else if(I.getOpcode() == BinaryOperator::Sub){
+			analysis[&I] = processSub(&I, analysis);
 	    }else if(I.getOpcode() == BinaryOperator::SRem){
 	    		analysis[&I] = processRem(&I, analysis);
 	    }
@@ -297,23 +448,7 @@ void updateGraphAnalysis(Function *F) {
 	}
 
 	// Print difference analysis for this BB
-	cout << "\n\tDiff\t";
-	for(auto it2 : analysisMap[BB.getName()])
-	{
-		std::cout << "\t" << it2.first;
-	}
-	cout << "\n";
-	for(auto it1 : analysisMap[BB.getName()])
-	{
-		cout << "\t" << it1.first;
-
-		for(auto it2 : analysisMap[BB.getName()])
-		{
-			std::cout << "\t\t" << std::max(it1.second.second, it2.second.second) - std::min(it1.second.first, it2.second.first);
-		}
-		cout << "\n";
-	}
-	cout << "\n\n";
+	if(printDiff) printDifferenceAnalysis(BB);
     }
 }
 
@@ -357,13 +492,21 @@ int main(int argc, char **argv)
 
     // Fixpoint Loop
     int i = 0;
-    bool loop = false;
+
+    loop = atoi(argv[2]);
+    printDiff = atoi(argv[3]);
+
+    // cout << "loop: " << loop << ", printDiff: " << printDiff << "\n";
     while(!fixPointReached(oldAnalysisMap)){
+	cout << "Round " << i++ << "\n";
+
         oldAnalysisMap.clear();
         oldAnalysisMap.insert(analysisMap.begin(), analysisMap.end());
         updateGraphAnalysis(F);
 
-	if(!loop) break;
+	cout << "\n\n\n";
+
+	if(loop == 0) break;
     }
 
     return 0;
@@ -378,4 +521,25 @@ std::string getSimpleNodeLabel(const BasicBlock *Node) {
 	raw_string_ostream OS(Str);
 	Node->printAsOperand(OS, false);
 	return OS.str();
+}
+
+// Print Difference Analysis
+void printDifferenceAnalysis(BasicBlock& BB) {
+	cout << "\n\tDiff\t";
+	for(auto it2 : analysisMap[BB.getName()])
+	{
+		std::cout << "\t" << it2.first;
+	}
+	cout << "\n";
+	for(auto it1 : analysisMap[BB.getName()])
+	{
+		cout << "\t" << it1.first;
+
+		for(auto it2 : analysisMap[BB.getName()])
+		{
+			std::cout << "\t\t" << std::max(it1.second.second, it2.second.second) - std::min(it1.second.first, it2.second.first);
+		}
+		cout << "\n";
+	}
+	cout << "\n\n";
 }

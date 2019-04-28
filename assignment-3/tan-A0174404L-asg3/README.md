@@ -5,15 +5,13 @@
 
 ## Generate .ll files
 clang++-3.5 -emit-llvm -S -o ./test-files/test2.ll ./test-files/test2.c
+clang++-3.5 -emit-llvm -S -o ./test-files/test3.ll ./test-files/test3.c
 
-## Build for Part 1 Task 2
+## Build for Part 1 Task 2 & Task 3
 clang++-3.5 -o absInt1 absInt1.cpp `llvm-config-3.5 --cxxflags` `llvm-config-3.5 --ldflags` `llvm-config-3.5 --libs` -lpthread -lncurses -ldl
 
-## Build for Part 1 Task 3
-clang++-3.5 -o absInt2 absInt2.cpp `llvm-config-3.5 --cxxflags` `llvm-config-3.5 --ldflags` `llvm-config-3.5 --libs` -lpthread -lncurses -ldl
-
 ## Test for Part 1 Task 2
-./absInt1 ./test-files/test2.ll
+./absInt1 ./test-files/test2.ll 0 1
 
 ## Test for Part 1 Task 3
-./absInt2 ./test-files/test3.ll
+./absInt1 ./test-files/test3.ll 1 1
