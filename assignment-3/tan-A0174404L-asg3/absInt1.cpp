@@ -55,35 +55,34 @@ bool fixPointReached(std::map<std::string,BBANALYSIS> oldAnalysisMap) {
 // Performs pair union
 std::pair<int,int> union_pairs(std::pair<int,int> A, std::pair<int,int> B)
 {
-	// cout << "A: " << A.first << ", " << A.second << "\n";
-	// cout << "B: " << B.first << ", " << B.second << "\n";
+	cout << "A: " << A.first << ", " << A.second << "\n";
+	cout << "B: " << B.first << ", " << B.second << "\n";
 
-	if(A.first == A.second && A.first != 0) {
-		if((B.first == B.second && B.first != 0)
-			|| (B.first > -10000 && B.second < 10000)) {
-			A.first = (A.first < B.first) ? A.first : B.first;
-			A.second = (A.second > B.second) ? A.second : B.second;
-		}
+	if(A.first == A.second && A.first != 0 && B.first <= -10000 && B.second >= 10000) {
+		cout << "RET: " << A.first << ", " << A.second << "\n\n";
+		return A;
+	} else if(B.first == B.second && B.first != 0 && A.first <= -10000 && A.second >= 10000) {
+		cout << "RET: " << B.first << ", " << B.second << "\n\n";
+		return B;
+	} else if(A.first == 0 && A.second == 0) {
+		cout << "RET: " << B.first << ", " << B.second << "\n\n";
+		return B;
+	} else if(B.first == 0 && B.second == 0) {
+		cout << "RET: " << A.first << ", " << A.second << "\n\n";
+		return A;
+	} else {
+		A.first = (A.first < B.first && A.first > -10000) ? A.first : (B.first > -10000) ? B.first : A.first;
+		A.second = (A.second > B.second && A.second < 10000) ? A.second : (B.second < 10000) ? B.second : A.second;
 	}
 
-	if(A.first == 0 && A.second == 0) {
-		A.first = B.first;
-		A.second = B.second;
-	}
-
-	if(A.first <= -10000 && A.second >= 10000 && ((B.first == B.second && B.first != 0)
-		|| (B.first != B.second))) {
-		A.first = B.first;
-		A.second = B.second;
-	}
-
+	// Swap if first is larger than second
 	if(A.first > A.second) {
 		int temp = A.first;
 		A.first = A.second;
 		A.second = temp;
 	}
 
-	// cout << "RET: " << A.first << ", " << A.second << "\n\n";
+	cout << "RET: " << A.first << ", " << A.second << "\n\n";
 
     return A;
 }
@@ -96,6 +95,8 @@ BBANALYSIS union_analysis(BBANALYSIS A, BBANALYSIS B)
 	{
 		A[it->first] = union_pairs(it->second,B[it->first]);
 	}
+
+	cout << "Iterate B\n\n";
 
 	for ( auto it = B.begin();it != B.end(); ++it)
 	{
@@ -442,7 +443,7 @@ BBANALYSIS applyCond(BBANALYSIS predPair, BasicBlock* predecessor, BasicBlock* B
 void updateGraphAnalysis(Function *F) {
     for (auto &BB: *F){
 	// Print instructions for this BB
-	// BB.dump();
+	BB.dump();
 
     	BBANALYSIS predUnion;
         
