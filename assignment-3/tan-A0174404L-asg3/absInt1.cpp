@@ -279,9 +279,31 @@ std::pair<int,int> processSub(llvm::Instruction* I, BBANALYSIS analysis)
 	// I->dump();
 	// cout << "\top1: " << op1 << ", op1Int: " << op1Int << "\n";
 	// cout << "\top2: " << op2 << ", op2Int: " << op2Int << "\n";
-	// cout << "\tRET: [" << op1Int - analysis[op2].first << ", " << op1Int - analysis[op2].second << "]\n";
+	// cout << analysis[op2].first << ", " << analysis[op2].second << "\n";
+	// cout << analysis[op1].first << ", " << analysis[op1].second << "\n";
 
-	return std::make_pair<int,int>(op1Int - analysis[op2].first, op1Int - analysis[op2].second);
+	std::pair<int, int> pair;
+
+	if(op1Int != 0) {
+		// cout << "\tRET1: [" << op1Int - analysis[op2].first << ", " << op1Int - analysis[op2].second << "]\n";
+		pair = std::make_pair<int,int>(op1Int - analysis[op2].first, op1Int - analysis[op2].second);
+	} else if(op2Int != 0) {
+		// cout << "\tRET2: [" << op2Int - analysis[op1].first << ", " << op2Int - analysis[op1].second << "]\n";
+		pair = std::make_pair<int,int>(op2Int - analysis[op1].first, op2Int - analysis[op1].second);
+	} else {
+		// cout << "\tRET3: [" << analysis[op1].first - analysis[op2].first << ", " << analysis[op1].second - analysis[op2].second << "]\n";
+		pair = std::make_pair<int,int>(analysis[op1].first - analysis[op2].first, analysis[op1].second - analysis[op2].second);
+	}
+
+	if(pair.first > pair.second) {
+		int temp = pair.first;
+		pair.first = pair.second;
+		pair.second = temp;
+	}
+
+	// cout << "\tRET: [" << pair.first << ", " << pair.second << "]\n";
+
+	return pair;
 }
 
 // Processing Rem Instructions
