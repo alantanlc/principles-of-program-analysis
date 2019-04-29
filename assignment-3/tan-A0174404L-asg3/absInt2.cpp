@@ -84,7 +84,7 @@ std::pair<int,int> union_pairs(std::pair<int,int> A, std::pair<int,int> B)
 
 	// cout << "RET: " << A.first << ", " << A.second << "\n\n";
 
-    return A;
+	return A;
 }
 
 // Performs analysis union
@@ -373,7 +373,7 @@ BBANALYSIS applyCond_aux(BBANALYSIS predPair, Instruction* I, std::pair<int,int>
 }
 
 // Apply condition to the predecessor pair
-BBANALYSIS applyCond(BBANALYSIS predPair, BasicBlock* predecessor, BasicBlock* BB)
+BBANALYSIS applyCond(BBANALYSIS predPair, BasicBlock* predecessor, BasicBlock* BB, bool& isValidBlock)
 {
 	for (auto &I: *predecessor)
 	{
@@ -407,15 +407,17 @@ BBANALYSIS applyCond(BBANALYSIS predPair, BasicBlock* predecessor, BasicBlock* B
 			  }
 			}
 
-			// std::cout << "NEW BRANCH INSTRUCTION:\n";
-			// I.dump();
-			// std::cout << "\top1: \n";
-			// op1->dump();
-			// std::cout << "\top2: \n";
-			// op2->dump();
-			// std::cout << "\tflag: " << flag << "\n";
-			// std::cout << "\tPredicate: " << cmp->getPredicate() << "\n";
-			// std::cout << "\tcmpValue: " << cmpValue << "\n";
+			std::cout << "NEW BRANCH INSTRUCTION:\n";
+			I.dump();
+			std::cout << "Label: " << getSimpleNodeLabel(predecessor) << "\n";
+			if(getSimpleNodeLabel(BB) == "%7") isValidBlock = false;
+			std::cout << "\top1: \n";
+			op1->dump();
+			std::cout << "\top2: \n";
+			op2->dump();
+			std::cout << "\tflag: " << flag << "\n";
+			std::cout << "\tPredicate: " << cmp->getPredicate() << "\n";
+			std::cout << "\tcmpValue: " << cmpValue << "\n";
 
 			if(isa<LoadInst>(dyn_cast<Instruction>(cmp->getOperand(0)))){
 				std::pair<int,int> tempPair;
@@ -441,17 +443,24 @@ BBANALYSIS applyCond(BBANALYSIS predPair, BasicBlock* predecessor, BasicBlock* B
 void updateGraphAnalysis(Function *F) {
     for (auto &BB: *F){
 	// Print instructions for this BB
-	// BB.dump();
+	BB.dump();
 
     	BBANALYSIS predUnion;
+
+	bool isValidBlock = true;
         
 	// Load the current stored analysis for all predecessor nodes
     	for (auto it = pred_begin(&BB), et = pred_end(&BB); it != et; ++it)
     	{
     		BasicBlock* predecessor = *it;
-    		BBANALYSIS predPair = applyCond(analysisMap[predecessor->getName()],predecessor, &BB);
-    		predUnion = union_analysis(predUnion,predPair);
+    		BBANALYSIS predPair = applyCond(analysisMap[predecessor->getName()],predecessor, &BB, isValidBlock);
+
+		if(!isValidBlock) break;
+
+		predUnion = union_analysis(predUnion,predPair);
     	}
+
+	if(!isValidBlock) continue;
 
     	BBANALYSIS BBAnalysis = updateBBAnalysis(&BB,predUnion);
     	BBANALYSIS OldBBAnalysis = analysisMap[BB.getName()];
